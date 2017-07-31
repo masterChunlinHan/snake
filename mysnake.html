@@ -1,0 +1,236 @@
+<html>
+    <head>
+        <title>我的贪吃蛇</title>
+        <meta charset='utf-8'>
+    </head>
+    <body>
+     <script>
+         var map;//地图
+         var food;//食物
+         var snake;//蛇
+         var timer;//定时器
+         var time=500;//定时器定的时间，默认为500ms
+         //地图构造器
+     function Map(){
+         this.width= 600;                  //地图的宽
+         this.height = 400;                //地图的高
+         this.position = 'relative';       //地图定位方式，这里为相对定位
+         this.backgroundColor = '#ccc';    //地图背景色
+         this.map=null;                    //一来用来保存地图，二来可以判断地图是不是已经存在，以免重复创建
+         //显示地图的方法
+         this.showMap =  function(){
+             if(this.map===null){
+            //加个判断保证地图只会创建一次
+             this.map = document.createElement('div');
+             document.body.appendChild(this.map);
+             }
+             
+             this.map.style.width = this.width+'px';
+             this.map.style.height = this.height + 'px';
+             this.map.style.backgroundColor = this.backgroundColor;
+             this.map.style.position = this.position;
+             
+          }
+         }
+     //食物构造器
+     function Food(){
+         this.width= 20;
+         this.height = 20;
+         this.x = 2;                  //这不是实际坐标，而是以食物的宽为单位
+         this.y = 2;
+         this.position = 'absolute';
+         this.backgroundColor = 'red';
+         this.food=null;
+         this.showFood=function(){
+             if(this.food===null){
+               this.food = document.createElement('div');
+               map.map.appendChild(this.food);            //把食物添加到地图上
+             }
+             this.x = Math.floor(Math.random()*30);       //食物的位置是随机的
+             this.y = Math.floor(Math.random()*20);
+
+             this.food.style.width = this.width+'px';
+             this.food.style.height = this.height + 'px';
+             this.food.style.backgroundColor = this.backgroundColor;
+             this.food.style.position = this.position;
+             this.food.style.left = this.width*this.x + 'px';
+             this.food.style.top = this.height*this.y + 'px';
+             
+         }
+     }
+     //蛇构造器
+     function Snake(){
+         this.position = 'absolute';
+         this.width = 20;
+         this.height = 20;
+         this.body = [[2,2,'red',null],[1,2,'blue',null],[0,2,'blue',null]];//蛇的身体，默认一个头，两个身体第一个为头，每个数组中的元素分别代表这节身体的x,y,颜色，以及负责显示这节身体的div
+         this.directionKeyCode=39;      //键盘的keyCode，默认39代表右键
+      //显示蛇
+         this.showSnake = function(){
+             for(var i=0;i<this.body.length;i++){
+                 if(this.body[i][3]===null){
+                 this.body[i][3] = document.createElement('div');//把
+                 map.map.appendChild(this.body[i][3]);
+                 }
+                 this.body[i][3].style.width =this.width+'px';
+                 this.body[i][3].style.height =this.height+'px';
+                 this.body[i][3].style.position = this.position;
+                 this.body[i][3].style.backgroundColor = this.body[i][2];
+                 this.body[i][3].style.left = this.width*this.body[i][0]+'px';
+                 this.body[i][3].style.top = this.width*this.body[i][1]+'px';
+                 
+             }
+         }
+    //移动蛇
+     this.moveSnake = function(){
+         //这个方法里的snake不能用this代替,原因上面已经说明
+         //更新每节身体的位置，除了蛇头外其他每节的位置更新为上一节的位置
+         //注意要从最后一节更新，因为每节的新位置是上一节的老位置，需要在上一节更新之前才能获取它的老位置
+         for(var i=snake.body.length-1;i>0;i--){
+             snake.body[i][0] = snake.body[i-1][0];
+             snake.body[i][1] = snake.body[i-1][1];
+         }
+         //设置蛇头位置
+         switch (snake.directionKeyCode){
+             case 37:                  //左
+             snake.body[0][0] -=1;
+             break;
+             case 38:                  //上
+             snake.body[0][1] -=1;
+             break;
+             case 39:                  //右
+             snake.body[0][0] +=1;
+             break;
+             case 40:                  //下
+             snake.body[0][1] +=1;
+             break;
+         }
+         //吃到食物的判断
+         if(snake.body[0][0]==food.x && snake.body[0][1]==food.y){
+             var lastBody = snake.body[snake.body.length-1]
+             snake.body.push([lastBody[0],lastBody[1],'blue',null]);
+             //吃到食物后更新食物的位置
+             food.showFood();
+             if(time>=250){
+                 time-=50;
+                 clearInterval(timer);
+                 timer = setInterval(snake.moveSnake,time);
+             }
+             
+         }
+        
+         //判断边界
+         if(snake.body[0][0]>29 || snake.body[0][0]<0||snake.body[0][1]>19||snake.body[0][1]<0){
+              confirm("GameOver,点确定重新开始");
+                location.href='?';         //刷新网页方法一
+             
+         }
+         //判断是否碰到到自己
+         for(var i=1;i<snake.body.length;i++){
+             if(snake.body[0][0]==snake.body[i][0]&&snake.body[0][1]==snake.body[i][1]){
+                 confirm("GameOver,点确定重新开始");
+                 //location.href='?';
+                 location.reload();        //刷新网页方法二
+             }
+         }
+         //显示蛇，此时蛇的位置已改变
+         snake.showSnake();
+       
+    }
+     
+     }
+     //停止按钮
+     function Stop(){
+         this.showStopBtn = function(){
+             var btn = document.createElement('button');
+             btn.innerHTML="暂停";
+             document.body.appendChild(btn);
+             
+             
+             btn.onclick = function(){
+                 clearInterval(timer);
+                 confirm("暂停中,点确定开始");
+                timer =setInterval(snake.moveSnake,time);
+             }
+         }
+     }
+     //开始按钮
+     function Start(){
+         this.showStartBtn = function(){
+             var btn = document.createElement('button');
+             btn.innerHTML="开始";
+             document.body.appendChild(btn);
+             btn.onclick = function(){
+                  clearInterval(timer);
+                 timer =setInterval(snake.moveSnake,time);
+             }
+         }
+     }
+     //方向实体键
+     function DirectionButton(){
+         this.showDirectButtons=function(){
+             var btn = document.createElement('button');
+             btn.innerHTML="上";
+             document.body.appendChild(btn);
+             btn.onclick = function(){
+                 snake.directionKeyCode=38;
+             }
+             
+             var btn = document.createElement('button');
+             btn.innerHTML="下";
+             document.body.appendChild(btn);
+             btn.onclick = function(){
+                 snake.directionKeyCode=40;
+             }
+             
+             var btn = document.createElement('button');
+             btn.innerHTML="左";
+             document.body.appendChild(btn);
+             btn.onclick = function(){
+                 snake.directionKeyCode=37;
+             }
+             
+             var btn = document.createElement('button');
+             btn.innerHTML="右";
+             document.body.appendChild(btn);
+             btn.onclick = function(){
+                 snake.directionKeyCode=39;
+             }
+         }
+         
+     }
+     //创建并显示地图
+     map=  new Map();
+     map.showMap();
+     //创建并显示食物
+     food = new Food();
+     food.showFood();
+     //创建并显示蛇
+      snake = new Snake();
+     snake.showSnake();
+     //设置定时器
+    // snake.moveSnake();
+     timer = window.setInterval(snake.moveSnake,time);
+     //添加键盘事件
+     document.body.onkeydown = function(e){
+         var event = window.event||e;
+         if(event.keyCode>=37&&event.keyCode<=40){//限制其他按键不起作用，只有上下左右四个按键起作用
+             snake.directionKeyCode = event.keyCode;
+         }
+         
+     }
+     //以下添加按键的步骤，可加可不加
+     //添加停止按钮
+     var stopBtn = new Stop();
+     stopBtn.showStopBtn();
+     //添加停止按钮
+     var startBtn = new Start();
+     startBtn.showStartBtn();
+     //添加上下左右按钮
+     var directionButtons = new DirectionButton();
+     directionButtons.showDirectButtons();
+     
+     
+     </script>
+    </body>
+</html>
